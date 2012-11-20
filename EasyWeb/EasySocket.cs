@@ -84,11 +84,11 @@ namespace EasyWeb
             // check if the connection failed due to timeout or successfully connected
             if (!es.m_Socket.Connected)
             {
-                IOLoop.Instance.PushEvent(() => { if (es.OnTimeout != null) es.OnTimeout(es); });
+                IOLoop.Instance.PushEvent(() => es.InvokeOnTimeout());
                 return;
             }
 
-            IOLoop.Instance.PushEvent(() => { if (es.OnConnect != null) es.OnConnect(es); });
+            IOLoop.Instance.PushEvent(() => es.InvokeOnConnect());
 
             // set up event handlers
             es.m_Socket.BeginReceive(es.m_ReadBuffer, 0, es.m_ReadBuffer.Length, SocketFlags.None, ReceiveEvent, es);
@@ -102,7 +102,7 @@ namespace EasyWeb
             EasySocket client = new EasySocket(es.m_Socket.EndAccept(rs));
 
             // send the event
-            IOLoop.Instance.PushEvent(() => { if (es.OnAccept != null) es.OnAccept(client); });
+            IOLoop.Instance.PushEvent(() => es.InvokeOnAccept(client));
 
             // configure client for events
             client.m_Socket.BeginReceive(client.m_ReadBuffer, 0, client.m_ReadBuffer.Length, SocketFlags.None, ReceiveEvent, client);
@@ -119,11 +119,11 @@ namespace EasyWeb
             int read = es.m_Socket.EndReceive(rs);
             if (read <= 0)
             {
-                IOLoop.Instance.PushEvent(() => { if (es.OnClose != null) es.OnClose(); });
+                IOLoop.Instance.PushEvent(() => es.InvokeOnClose());
             }
             else
             {
-                IOLoop.Instance.PushEvent(() => { if (es.OnRead != null) es.OnRead(es.m_ReadBuffer, read); });
+                IOLoop.Instance.PushEvent(() => es.InvokeOnRead(es.m_ReadBuffer, read));
 
                 // create a new buffer for reading, since the old one may not be processed for some time
                 es.m_ReadBuffer = new byte[4096];
@@ -141,13 +141,43 @@ namespace EasyWeb
             int bytes = es.m_Socket.EndSend(rs);
 
             // signal callback
-            IOLoop.Instance.PushEvent(() => { if (es.OnWrite != null) es.OnWrite(); });
+            IOLoop.Instance.PushEvent(() => es.InvokeOnWrite());
+        }
+
+        private void InvokeOnAccept(EasySocket client)
+        {
+            if (OnAccept != null)
+                OnAccept(this, client);
+        }
+
+        private void InvokeOnConnect()
+        {
+            if (OnConnect != null)
+                OnConnect(this);
+        }
+
+        private void InvokeOnTimeout()
+        {
+            if (OnTimeout != null)
+                OnTimeout(this);
+        }
+
+        private void InvokeOnClose()
+        {
+            if (OnClose != null)
+                OnClose(this);
         }
 
         private void InvokeOnRead(byte[] bytes, int len)
         {
             if (OnRead != null)
                 OnRead(this, bytes, len);
+        }
+
+        private void InvokeOnWrite()
+        {
+            if (OnWrite != null)
+                OnWrite(this);
         }
     }
 }

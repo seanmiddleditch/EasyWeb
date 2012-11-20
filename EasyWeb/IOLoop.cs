@@ -18,9 +18,10 @@ namespace EasyWeb
 
         public void Run()
         {
-            while (m_ResetEvent.Reset())
+            while (true)
             {
                 m_ResetEvent.WaitOne();
+                m_ResetEvent.Reset();
 
                 // process all waiting events
                 Action action;

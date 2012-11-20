@@ -14,7 +14,7 @@ namespace Demo
             IOLoop.Instance.Run();
         }
 
-        static void OnAccept(EasySocket client)
+        static void OnAccept(EasySocket socket, EasySocket client)
         {
             System.Console.Out.WriteLine("CONNECTION!");
 
@@ -25,13 +25,13 @@ namespace Demo
             client.Close();
         }
 
-        static void OnRead(byte[] bytes, int len)
+        static void OnRead(EasySocket socket, byte[] bytes, int len)
         {
             if (len != 0)
                 System.Console.Out.WriteLine(Encoding.UTF8.GetString(bytes, 0, len));
         }
 
-        static void OnClose()
+        static void OnClose(EasySocket socket)
         {
 
         }
